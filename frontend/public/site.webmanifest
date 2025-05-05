@@ -1,6 +1,6 @@
 {
-  "name": "TaskHub",
-  "short_name": "MySite",
+  "name": "TasksHub",
+  "short_name": "TH",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
