@@ -1,0 +1,56 @@
+@use "./styles/mixins";
+@use "./styles/variables";
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("./assets/fonts/Montserrat-Black.ttf");
+  weight: 900;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("./assets/fonts/Montserrat-Bold.ttf");
+  weight: 700;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("./assets/fonts/Montserrat-Regular.ttf");
+  weight: 400;
+}
+
+
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Montserrat";
+  font-weight: 400;
+}
+
+body{
+  min-height: 100vh;
+  background: variables.$back;
+}
+
+a{
+  text-decoration: none;
+}
+li{
+  list-style: none;
+}
+
+main{
+  flex: 1 1 auto;
+}
+
+.btn{
+  @include mixins.btnMixin(
+    variables.$backBlur,
+    0 0 30px variables.$backBlur,
+    15px 30px,
+    18px,
+    700,
+    variables.$border,
+    #fff,
+  );
+  border-radius: 40px;
+}

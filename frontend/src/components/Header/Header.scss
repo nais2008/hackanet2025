@@ -1,0 +1,30 @@
+@use "../../styles/animations";
+
+header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+
+  .logo{
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    font: {
+      size: 24px;
+      weight: 700;
+    };
+    cursor: pointer;
+    color: #fff;
+
+    img{
+      filter: invert(100%) hue-rotate(0deg);
+      width: 60px;
+      animation: rotate 30s linear infinite;
+    }
+  }
+  .btns{
+    display: flex;
+    gap: 40px;
+  }
+}
