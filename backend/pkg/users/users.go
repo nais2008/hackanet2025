@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"log"
 	"os"
 
@@ -55,11 +56,10 @@ func (db *DB) Close() {
 func (r *DB) CreateUser(ctx context.Context, u *model.User) (int, error) {
 	var id int
 	query := `INSERT INTO user_user (name, image, password, username, email, role, date_join, last_login, attempts_count, block_date)
-VALUES ($1,$2,$3,$4,$5,'user', NOW(), NOW(), 0, NULL) RETURNING id`
-	err := r.Pool.QueryRow(ctx, query,
-		u.Name, u.Image, u.Password, u.Username, u.Email,
-	).Scan(&id)
+              VALUES ($1, $2, $3, $4, $5, 'user', NOW(), NOW(), 0, NULL) RETURNING id`
+	err := r.Pool.QueryRow(ctx, query, u.Name, u.Image, u.Password, u.Username, u.Email).Scan(&id)
 	if err != nil {
+		log.Printf("Error creating user: %v", err)
 		return 0, fmt.Errorf("create user: %w", err)
 	}
 	return id, nil
@@ -68,13 +68,16 @@ VALUES ($1,$2,$3,$4,$5,'user', NOW(), NOW(), 0, NULL) RETURNING id`
 // GetUser retrieves a user by ID
 func (r *DB) GetUser(ctx context.Context, userID int) (*model.User, error) {
 	u := &model.User{}
-	query := `SELECT id,name,image,password,username,email,role,date_join,last_login,attempts_count,block_date
-FROM user_user WHERE id=$1`
+	query := `SELECT id, name, image, password, username, email, role, date_join, last_login, attempts_count, block_date
+              FROM user_user WHERE id=$1`
 	err := r.Pool.QueryRow(ctx, query, userID).Scan(
 		&u.ID, &u.Name, &u.Image, &u.Password, &u.Username, &u.Email,
 		&u.Role, &u.DateJoined, &u.LastLogin, &u.AttemptsCount, &u.BlockDate,
 	)
-	if err != nil {
+	if err == pgx.ErrNoRows {
+		return nil, fmt.Errorf("user not found")
+	} else if err != nil {
+		log.Printf("Error getting user: %v", err)
 		return nil, fmt.Errorf("get user: %w", err)
 	}
 	return u, nil
@@ -97,11 +100,10 @@ FROM user_user WHERE username=$1`
 
 // UpdateUser updates mutable fields: name, image, password, email
 func (r *DB) UpdateUser(ctx context.Context, u *model.User) error {
-	cmd, err := r.Pool.Exec(ctx,
-		`UPDATE user_user SET name=$1, image=$2, password=$3, email=$4, last_login=NOW() WHERE id=$5`,
-		u.Name, u.Image, u.Password, u.Email, u.ID,
-	)
+	query := `UPDATE user_user SET name=$1, image=$2, password=$3, email=$4, last_login=NOW() WHERE id=$5`
+	cmd, err := r.Pool.Exec(ctx, query, u.Name, u.Image, u.Password, u.Email, u.ID)
 	if err != nil {
+		log.Printf("Error updating user: %v", err)
 		return fmt.Errorf("update user: %w", err)
 	}
 	if cmd.RowsAffected() == 0 {
@@ -112,8 +114,10 @@ func (r *DB) UpdateUser(ctx context.Context, u *model.User) error {
 
 // DeleteUser removes a user
 func (r *DB) DeleteUser(ctx context.Context, userID int) error {
-	cmd, err := r.Pool.Exec(ctx, `DELETE FROM user_user WHERE id=$1`, userID)
+	query := `DELETE FROM user_user WHERE id=$1`
+	cmd, err := r.Pool.Exec(ctx, query, userID)
 	if err != nil {
+		log.Printf("Error deleting user: %v", err)
 		return fmt.Errorf("delete user: %w", err)
 	}
 	if cmd.RowsAffected() == 0 {
@@ -139,6 +143,7 @@ func IsAdmin(u model.User) bool {
 	return u.Role == "admin"
 }
 
+// CheckUserExists checks if a user with the given username or email exists
 func (r *DB) CheckUserExists(ctx context.Context, username, email string) (bool, error) {
 	var exists bool
 	query := `SELECT EXISTS(SELECT 1 FROM user_user WHERE username=$1 OR email=$2)`

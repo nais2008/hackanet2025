@@ -257,6 +257,29 @@ func (api *API) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if user.Username == "" {
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("username is required"))
+		return
+	}
+	if user.Email == "" {
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("email is required"))
+		return
+	}
+	if user.Password == "" {
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("password is required"))
+		return
+	}
+
+	exists, err := api.usersDB.CheckUserExists(r.Context(), user.Username, user.Email)
+	if err != nil {
+		api.sendError(w, http.StatusInternalServerError, err)
+		return
+	}
+	if exists {
+		api.sendError(w, http.StatusConflict, fmt.Errorf("user with this username or email already exists"))
+		return
+	}
+
 	id, err := api.usersDB.CreateUser(r.Context(), &user)
 	if err != nil {
 		api.sendError(w, http.StatusInternalServerError, err)
@@ -276,7 +299,7 @@ func (api *API) getUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := api.usersDB.GetUser(r.Context(), id)
 	if err != nil {
-		api.sendError(w, http.StatusNotFound, err)
+		api.sendError(w, http.StatusNotFound, fmt.Errorf("user not found"))
 		return
 	}
 
@@ -298,6 +321,12 @@ func (api *API) updateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	user.ID = id
 
+	_, err = api.usersDB.GetUser(r.Context(), id)
+	if err != nil {
+		api.sendError(w, http.StatusNotFound, fmt.Errorf("user not found"))
+		return
+	}
+
 	if err := api.usersDB.UpdateUser(r.Context(), &user); err != nil {
 		api.sendError(w, http.StatusInternalServerError, err)
 		return
@@ -315,7 +344,11 @@ func (api *API) deleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := api.usersDB.DeleteUser(r.Context(), id); err != nil {
-		api.sendError(w, http.StatusInternalServerError, err)
+		if err.Error() == fmt.Sprintf("user %d not found", id) {
+			api.sendError(w, http.StatusNotFound, err)
+		} else {
+			api.sendError(w, http.StatusInternalServerError, err)
+		}
 		return
 	}
 
