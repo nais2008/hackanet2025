@@ -196,6 +196,60 @@ func (db *DB) UpdateProjectTitle(ctx context.Context, projectID int, newTitle st
 	return nil
 }
 
+func (db *DB) CreateProject(ctx context.Context, title string, userID int) (int, error) {
+	var id int
+	query := `INSERT INTO project_project (title, user_id) VALUES ($1, $2) RETURNING id`
+	err := db.Pool.QueryRow(ctx, query, title, userID).Scan(&id)
+	if err != nil {
+		return 0, fmt.Errorf("create project: %w", err)
+	}
+	return id, nil
+}
+
+// DeleteProject removes a project and all related data (comments, files, images, tasks).
+func (db *DB) DeleteProject(ctx context.Context, projectID int) error {
+	// start transaction
+	tx, err := db.Pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("delete project begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// delete project-level relations
+	tables := []string{"project_comments", "project_files", "project_images"}
+	for _, tbl := range tables {
+		if _, err := tx.Exec(ctx, fmt.Sprintf("DELETE FROM %s WHERE project_id = $1", tbl), projectID); err != nil {
+			return fmt.Errorf("delete from %s: %w", tbl, err)
+		}
+	}
+
+	// delete associated tasks via DeleteTask
+	rows, err := tx.Query(ctx, "SELECT id FROM task_task WHERE project_id = $1", projectID)
+	if err != nil {
+		return fmt.Errorf("select tasks for delete: %w", err)
+	}
+	var taskIDs []int
+	for rows.Next() {
+		var tid int
+		if err := rows.Scan(&tid); err == nil {
+			taskIDs = append(taskIDs, tid)
+		}
+	}
+	rows.Close()
+	for _, tid := range taskIDs {
+		if err := db.DeleteTask(ctx, tid); err != nil {
+			return fmt.Errorf("delete task %d: %w", tid, err)
+		}
+	}
+
+	// finally delete project record
+	if _, err := tx.Exec(ctx, "DELETE FROM project_project WHERE id = $1", projectID); err != nil {
+		return fmt.Errorf("delete project record: %w", err)
+	}
+
+	return tx.Commit(ctx)
+}
+
 func (db *DB) Close() {
 	if db.Pool != nil {
 		db.Pool.Close()
