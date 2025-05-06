@@ -1,10 +1,12 @@
 @use "../../styles/animations";
+@use "../../styles/mixins";
 
 header{
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 40px;
+  padding: 20px 100px;
+  position: static;
 
   .logo{
     display: flex;
@@ -12,7 +14,7 @@ header{
     gap: 40px;
     font: {
       size: 24px;
-      weight: 700;
+      weight: 900;
     };
     cursor: pointer;
     color: #fff;
@@ -24,6 +26,32 @@ header{
 
       &:hover{
         animation-play-state: paused;
+      }
+    }
+  }
+  nav{
+    display: flex;
+    align-items: center;
+    @include mixins.glassMixin(
+      0 10px 30px rgba($color: #fff, $alpha: .05),
+      20px 40px,
+      linear-gradient(
+        rgba($color: #fff, $alpha: .10),
+        rgba($color: #999999, $alpha: .10),
+      ),
+      40px,
+      1px solid rgba($color: #fff, $alpha: .10)
+    );
+
+    ul{
+      display: flex;
+      gap: 40px;
+      align-items: center;
+
+      li a{
+        color: #fff;
+        font-size: 20px;
+        font-weight: 700;
       }
     }
   }

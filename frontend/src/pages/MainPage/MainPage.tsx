@@ -1,6 +1,14 @@
+import Placeholder from "./components/Placeholder"
+import Slider from "./components/Slider"
+import Workflow from "./components/Workflow"
+
 const MainPage = () => {
   return (
-    <div>MainPage</div>
+    <>
+      <Placeholder />
+      <Workflow />
+      <Slider />
+    </>
   )
 }
 

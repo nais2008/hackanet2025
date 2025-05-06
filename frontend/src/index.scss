@@ -4,17 +4,17 @@
 @font-face {
   font-family: "Montserrat";
   src: url("./assets/fonts/Montserrat-Black.ttf");
-  weight: 900;
+  font-weight: 900;
 }
 @font-face {
   font-family: "Montserrat";
   src: url("./assets/fonts/Montserrat-Bold.ttf");
-  weight: 700;
+  font-weight: 700;
 }
 @font-face {
   font-family: "Montserrat";
   src: url("./assets/fonts/Montserrat-Regular.ttf");
-  weight: 400;
+  font-weight: 400;
 }
 
 
@@ -29,10 +29,28 @@
 body{
   min-height: 100vh;
   background: variables.$back;
+  scroll-behavior: smooth;
 }
 
 a{
   text-decoration: none;
+  color: #fff;
+  position: relative;
+
+  &:not(.btn, :has(img), .active, .aside_nav)::after{
+    content: "";
+    display: block;
+    background: #fff;
+    height: 2px;
+    width: 0%;
+    position: absolute;
+    left: 50%;
+    transition: all .2s;
+  }
+  &:not(.btn, :has(img), .active, .aside_nav):hover::after{
+    width: 100%;
+    left: 0;
+  }
 }
 li{
   list-style: none;
@@ -40,11 +58,11 @@ li{
 
 main{
   flex: 1 1 auto;
+  padding-inline: 100px;
 }
 
 .btn{
   @include mixins.btnMixin(
-    variables.$backBlur,
     0 0 30px variables.$backBlur,
     15px 30px,
     18px,
@@ -53,4 +71,69 @@ main{
     #fff,
   );
   border-radius: 40px;
+}
+
+form{
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: 600px;
+  padding: 20px;
+  background: rgba($color: #1A1A1A, $alpha: .75);
+  border-radius: 10px;
+  position: relative;
+  z-index: 2;
+  backdrop-filter: blur(40px);
+
+  h2{
+    color: #fff;
+    font-weight: 900;
+    font-size: 32px;
+  }
+  &::after{
+    content: "";
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: block;
+    z-index: -1;
+    filter: blur(40px) brightness(60%);
+    background: radial-gradient(circle at 30% 60%, #00e6ff, #00e4ff, #00d5ff, #00aeff, #0061ff, #1d00ff, #9c00ff, #e900ff, #ff00ee, #ff00df, #ff00dd);
+  }
+  .links{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    a{
+      font-weight: 700;
+    }
+  }
+}
+
+input,
+textarea,
+select{
+  width: 100%;
+  height: 40px;
+  padding: 30px 20px;
+  background: linear-gradient(
+    0deg,
+    rgba($color: #fff, $alpha: .10) 0%,
+    rgba($color: #999999, $alpha: .10) 100%
+  );
+  border-radius: 10px;
+  outline: none;
+  border: none;
+  font-size: 24px;
+  color: #fff;
+
+  &::placeholder{
+    color: #aaa;
+    font-size: 20px;
+    font-weight: 700;
+  }
 }

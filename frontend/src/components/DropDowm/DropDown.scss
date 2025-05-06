@@ -1,0 +1,56 @@
+@use "../../styles/variables";
+
+.dropdown {
+  position: relative;
+  width: 200px;
+
+  .dropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 4px;
+
+    .icon {
+      transition: transform 0.3s;
+      &.open {
+        transform: rotate(90deg);
+      }
+    }
+  }
+
+  .dropdown-body {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    z-index: 1;
+    max-height: 500px;
+    overflow-y: auto;
+
+    &.open {
+      display: block;
+    }
+    .dropdown-item {
+      padding: 10px;
+      cursor: pointer;
+      transition: background .2s;
+      border-radius: 10px;
+
+      &:hover {
+        background-color: variables.$backLightBlude;
+      }
+      .dropdown-item-dot {
+        color: #ccc;
+
+        &.selected {
+          color: #000;
+        }
+      }
+    }
+  }
+}

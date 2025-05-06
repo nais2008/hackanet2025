@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import { HashLink } from "react-router-hash-link"
 
 import logo from "/logo.svg"
 
@@ -9,14 +10,21 @@ const Header = () => {
     <header>
       <Link to="/" className="logo">
         <img src={ logo } alt="logo" />
-        TaskHub
+        TasksHub
       </Link>
       <nav>
-        <ul></ul>
+        <ul>
+          <li>
+            <HashLink smooth  to="/#proces">Процесс</HashLink>
+          </li>
+          <li>
+            <HashLink smooth  to="/#feedback">Отзывы</HashLink>
+          </li>
+        </ul>
       </nav>
       <div className="btns">
-        <Link className="btn" to="/">Try</Link>
-        <Link className="btn" to="/signup">Sgin Up</Link>
+        <Link className="btn" to="/p">Использовать</Link>
+        <Link className="btn" to="/login">Войти</Link>
       </div>
     </header>
   )

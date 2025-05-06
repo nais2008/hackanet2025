@@ -1,0 +1,81 @@
+@use "../../styles/mixins";
+@use "../../styles/variables";
+
+aside{
+  height: 100vh;
+  width: 250px;
+  @include mixins.glassMixin(
+    none,
+    20px,
+    liner-gradient(
+      90deg,
+      rgba($color: #fff, $alpha: .10),
+      rgba($color: #999999, $alpha: .10),
+    ),
+    0 20px 20px 0,
+    1px solid rgba($color: #fff, $alpha: .10),
+  );
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+
+  &::before{
+    content: "";
+    display: block;
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    top: 10px;
+    left: 10px;
+    filter: blur(50px);
+    background: linear-gradient(
+      135deg,
+      variables.$neonLightBlue,
+      variables.$purple
+    );
+  }
+  .aside__header{
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    color: variables.$lightlightblue;
+    cursor: pointer;
+
+    a{
+      font-size: 24px;
+      font-weight: 900;
+    }
+  }
+  .aside__main{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    li :is(a, div){
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      color: variables.$lightlightblue;
+      cursor: pointer;
+
+      &.active{
+        padding: 20px;
+        background: variables.$backLightBlude;
+        border-radius: 10px;
+        font-weight: 700;
+      }
+    }
+  }
+  .accaunt{
+    flex: 1;
+    display: flex;
+    align-content: flex-end;
+
+    .avatar{
+      width: 50px;
+      height: 50px;
+      background-color: #999999;
+    }
+  }
+}

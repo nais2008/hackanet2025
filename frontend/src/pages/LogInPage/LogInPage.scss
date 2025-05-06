@@ -1,0 +1,10 @@
+.login-wrapper{
+  display: grid;
+  height: 100%;
+  place-content: center;
+}
+
+main:has(.login-wrapper){
+  display: grid;
+  place-content: center;
+}

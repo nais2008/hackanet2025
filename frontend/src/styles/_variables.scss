@@ -1,5 +1,15 @@
-$back: #262626;
+$back: #1A1A1A;
+
 $color: #fff;
-$backBlur: rgba($color: #fff, $alpha: .05);
+
+$backBlur: rgba(
+  $color: #fff,
+  $alpha: .05
+);
 $border: 1px solid $backBlur;
-$btnHover: rgba($color: #00E6FF, $alpha: .75);
+
+$neonLightBlue: #00E6FF;
+$neonDarkBlue: #008A99;
+$purple: #FF00DD;
+$lightlightblue: #D3FBFF;
+$backLightBlude: rgba($color: #00E6FF, $alpha: .5);

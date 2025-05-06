@@ -1,0 +1,26 @@
+@use "../../styles/variables";
+@use "../../styles/mixins";
+
+.error{
+  color: #fff;
+  display: grid;
+  place-content: center;
+  flex-direction: column;
+  gap: 40px;
+
+  @include mixins.glassMixin(
+    0 0 30px variables.$backBlur,
+    40px,
+    variables.$backBlur,
+    20px,
+    1px solid variables.$backBlur,
+  );
+
+  h1{
+    font-weight: 48;
+    font-weight: 900;
+  }
+  .btn{
+    text-align: center;
+  }
+}

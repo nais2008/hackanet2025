@@ -1,0 +1,67 @@
+@use "../../../../styles/variables";
+
+.placeholder{
+  position: relative;
+  height: calc(100vh - 106px);
+
+  & > *{
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .text{
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    text-align: center;
+    color: #fff;
+    align-content: center;
+    justify-content: center;
+
+    h1{
+      font: {
+        size: 48px;
+        weight: 700;
+      };
+      width: 850px;
+    }
+    .btn{
+      align-self: center;
+      background: linear-gradient(
+        0deg,
+        rgba($color: #fff, $alpha: .30) 0%,
+        rgba($color: #999999, $alpha: .30) 100%
+      );
+
+      &:hover{
+        background: linear-gradient(
+          0deg,
+          rgba($color: #fff, $alpha: .50) 0%,
+          rgba($color: #999999, $alpha: .50) 100%
+        );
+        color: #fff;
+        box-shadow: none;
+      }
+    }
+  }
+  img{
+    filter: brightness(50%);
+  }
+  .circle{
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    border: 1px solid variables.$neonLightBlue;
+    background: linear-gradient(
+      165deg,
+      variables.$neonLightBlue,
+      variables.$purple
+    );
+    backdrop-filter: blur(50px);
+    filter: opacity(40%);
+    top: calc(50% - 140px);
+    left: calc(50% + 150px)
+  }
+}

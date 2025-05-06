@@ -1,7 +1,17 @@
 @use "./variables";
 
+@property --color-gradient-start {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: rgba($color: #fff, $alpha: .10);
+}
+@property --color-gradient-end {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: rgba($color: #999999, $alpha: .10);
+}
+
 @mixin btnMixin(
-  $back,
   $shadow,
   $padding,
   $fz,
@@ -9,7 +19,11 @@
   $border,
   $color,
 ){
-  background: $back;
+  background: linear-gradient(
+    0deg,
+    var(--color-gradient-start) 0%,
+    var(--color-gradient-end) 100%
+  );
   box-shadow: $shadow;
   padding: $padding;
   border: $border;
@@ -19,15 +33,32 @@
   };
   color: $color;
   transition:
-    all .2s linear;
-  backdrop-filter: blur(20px);
+    background 0.4s ease,
+    color 0.2s ease,
+  box-shadow 0.4s ease;
 
-  &:hover{
-    background: rgba(
-      $color: variables.$btnHover,
-      $alpha: .75
+  &:hover {
+    background: linear-gradient(
+      0deg,
+      variables.$neonLightBlue 0%,
+      variables.$neonDarkBlue 100%
     );
     color: #000;
-    box-shadow: 0 0 30px variables.$btnHover;
+    box-shadow: 0 10px 30px variables.$neonLightBlue;
   }
+}
+
+@mixin glassMixin(
+  $shadow,
+  $padding,
+  $back,
+  $boder-r,
+  $border,
+){
+  padding: $padding;
+  border-radius: $boder-r;
+  background: $back;
+  backdrop-filter: blur(30px);
+  border: $border;
+  box-shadow: $shadow;
 }

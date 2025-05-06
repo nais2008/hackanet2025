@@ -1,0 +1,75 @@
+@use "../../styles/animations";
+@use "../../styles/mixins";
+
+footer{
+  display: flex;
+  clip-path: polygon(0% 12%, 15% 0%, 30% 15%, 51% 7%, 75% 2%, 86% 10%, 100% 7%, 100% 100%, 0% 100%);
+  background-color: rgba($color: #fff, $alpha: .15);
+  box-shadow: 0 -10px 30px rgba($color: #fff, $alpha: .05);
+  backdrop-filter: blur(30px);
+  padding: {
+    inline: 100px;
+    block: 100px 40px;
+  };
+  position: relative;
+  z-index: 2;
+
+  &::after{
+    display: block;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    filter: blur(100px);
+    content: "";
+    background: -webkit-linear-gradient(90deg, rgb(255, 0, 221) 9%, rgb(0, 230, 255) 79%);
+    background: -moz-linear-gradient(90deg, rgb(255, 0, 221) 9%, rgb(0, 230, 255) 79%);
+    background: linear-gradient(90deg, rgb(255, 0, 221) 9%, rgb(0, 230, 255) 79%);
+    z-index: -1;
+    width: 80%;
+    height: 100px;
+  }
+  .left{
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+
+    p{
+      color: #fff;
+      font-weight: 400;
+    }
+    .logo{
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      font: {
+        size: 24px;
+        weight: 900;
+      };
+      cursor: pointer;
+      color: #fff;
+
+      img{
+        filter: invert(100%) hue-rotate(0deg);
+        width: 60px;
+        animation: rotate 30s linear infinite;
+
+        &:hover{
+          animation-play-state: paused;
+        }
+      }
+    }
+  }
+  .right{
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+    padding-left: 50%;
+
+    ul{
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+  }
+}
