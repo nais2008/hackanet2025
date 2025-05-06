@@ -1,8 +1,11 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -48,9 +51,9 @@ func (api *API) setupEndpoints() {
 
 	// Task endpoints
 	api.r.HandleFunc("/projects/{projectId}/tasks", api.createTask).Methods(http.MethodPost)
-	api.r.HandleFunc("/tasks/{id}", api.getTask).Methods(http.MethodGet)
-	api.r.HandleFunc("/tasks/{id}", api.updateTask).Methods(http.MethodPut)
-	api.r.HandleFunc("/tasks/{id}", api.deleteTask).Methods(http.MethodDelete)
+	api.r.HandleFunc("/projects/{projectId}/tasks/{id}", api.getTask).Methods(http.MethodGet)
+	api.r.HandleFunc("/projects/{projectId}/tasks/{id}", api.updateTask).Methods(http.MethodPut)
+	api.r.HandleFunc("/projects/{projectId}/tasks/{id}", api.deleteTask).Methods(http.MethodDelete)
 
 	// User endpoints
 	api.r.HandleFunc("/users", api.createUser).Methods(http.MethodPost)
@@ -100,7 +103,16 @@ func (api *API) createProject(w http.ResponseWriter, r *http.Request) {
 		UserID int    `json:"user_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body"))
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err))
+		return
+	}
+
+	if input.Title == "" {
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("title is required"))
+		return
+	}
+	if input.UserID <= 0 {
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("valid user_id is required"))
 		return
 	}
 
@@ -142,7 +154,12 @@ func (api *API) updateProject(w http.ResponseWriter, r *http.Request) {
 		Title string `json:"title"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body"))
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err))
+		return
+	}
+
+	if input.Title == "" {
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("title is required"))
 		return
 	}
 
@@ -175,36 +192,56 @@ func (api *API) createTask(w http.ResponseWriter, r *http.Request) {
 	projectIdStr := mux.Vars(r)["projectId"]
 	projectID, err := strconv.Atoi(projectIdStr)
 	if err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid project ID"))
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid project ID: %w", err))
 		return
 	}
 
 	var input projectmodel.Task
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body"))
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err))
+		return
+	}
+
+	if input.Title == "" {
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("title is required"))
 		return
 	}
 
 	id, err := api.db.CreateTask(r.Context(), projectID, input.Title, input.Description, input.Full_description)
 	if err != nil {
-		api.sendError(w, http.StatusInternalServerError, err)
+		api.sendError(w, http.StatusInternalServerError, fmt.Errorf("failed to create task: %w", err))
 		return
 	}
 
 	api.sendSuccess(w, http.StatusCreated, map[string]int{"id": id})
 }
-
 func (api *API) getTask(w http.ResponseWriter, r *http.Request) {
-	idStr := mux.Vars(r)["id"]
-	id, err := strconv.Atoi(idStr)
+	vars := mux.Vars(r)
+	projectIdStr := vars["projectId"]
+	projectID, err := strconv.Atoi(projectIdStr)
+	if err != nil {
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid project ID"))
+		return
+	}
+
+	taskIdStr := vars["id"]
+	taskID, err := strconv.Atoi(taskIdStr)
 	if err != nil {
 		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid task ID"))
 		return
 	}
 
-	task, err := api.db.GetTaskByID(r.Context(), id)
+	// Предполагается, что в projects.go есть GetTaskByID
+	// Если у тебя другая функция (например, GetTask), замени здесь
+	task, err := api.db.GetTaskByID(r.Context(), taskID)
 	if err != nil {
 		api.sendError(w, http.StatusNotFound, err)
+		return
+	}
+
+	// Проверяем, что задача принадлежит указанному проекту
+	if task.ProjectID != projectID {
+		api.sendError(w, http.StatusNotFound, fmt.Errorf("task with ID %d not found in project %d", taskID, projectID))
 		return
 	}
 
@@ -212,20 +249,46 @@ func (api *API) getTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *API) updateTask(w http.ResponseWriter, r *http.Request) {
-	idStr := mux.Vars(r)["id"]
-	id, err := strconv.Atoi(idStr)
+	vars := mux.Vars(r)
+	projectIdStr := vars["projectId"]
+	projectID, err := strconv.Atoi(projectIdStr)
+	if err != nil {
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid project ID"))
+		return
+	}
+
+	taskIdStr := vars["id"]
+	taskID, err := strconv.Atoi(taskIdStr)
 	if err != nil {
 		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid task ID"))
 		return
 	}
 
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("failed to read request body: %w", err))
+		return
+	}
+	log.Printf("updateTask: Received body: %s", string(body))
+	r.Body = io.NopCloser(bytes.NewReader(body))
+
 	var input projectmodel.Task
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body"))
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err))
+		return
+	}
+	log.Printf("updateTask: Parsed input: %+v", input)
+
+	if input.Title == "" {
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("title is required"))
 		return
 	}
 
-	if err := api.db.UpdateTask(r.Context(), id, input.Title, input.Description, input.Full_description); err != nil {
+	// Предполагается, что UpdateTask принимает projectID, taskID и поля задачи
+	// Если сигнатура другая, например:
+	// func (r *DB) UpdateTask(ctx context.Context, taskID int, title, description, fullDescription string) error
+	// Используй: api.db.UpdateTask(r.Context(), taskID, input.Title, input.Description, input.Full_description)
+	if err := api.db.UpdateTask(r.Context(), projectID, taskID, input.Title, input.Description, input.Full_description); err != nil {
 		api.sendError(w, http.StatusInternalServerError, err)
 		return
 	}
@@ -234,14 +297,26 @@ func (api *API) updateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *API) deleteTask(w http.ResponseWriter, r *http.Request) {
-	idStr := mux.Vars(r)["id"]
-	id, err := strconv.Atoi(idStr)
+	vars := mux.Vars(r)
+	projectIdStr := vars["projectId"]
+	projectID, err := strconv.Atoi(projectIdStr)
+	if err != nil {
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid project ID"))
+		return
+	}
+
+	taskIdStr := vars["id"]
+	taskID, err := strconv.Atoi(taskIdStr)
 	if err != nil {
 		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid task ID"))
 		return
 	}
 
-	if err := api.db.DeleteTask(r.Context(), id); err != nil {
+	// Предполагается, что DeleteTask принимает projectID и taskID
+	// Если сигнатура другая, например:
+	// func (r *DB) DeleteTask(ctx context.Context, taskID int) error
+	// Используй: api.db.DeleteTask(r.Context(), taskID)
+	if err := api.db.DeleteTask(r.Context(), projectID, taskID); err != nil {
 		api.sendError(w, http.StatusInternalServerError, err)
 		return
 	}
@@ -253,7 +328,7 @@ func (api *API) deleteTask(w http.ResponseWriter, r *http.Request) {
 func (api *API) createUser(w http.ResponseWriter, r *http.Request) {
 	var user usermodel.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body"))
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err))
 		return
 	}
 
@@ -316,7 +391,7 @@ func (api *API) updateUser(w http.ResponseWriter, r *http.Request) {
 
 	var user usermodel.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body"))
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err))
 		return
 	}
 	user.ID = id
@@ -359,11 +434,10 @@ func (api *API) deleteUser(w http.ResponseWriter, r *http.Request) {
 func (api *API) registerUser(w http.ResponseWriter, r *http.Request) {
 	var user usermodel.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body"))
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err))
 		return
 	}
 
-	// Проверка обязательных полей
 	if user.Username == "" {
 		api.sendError(w, http.StatusBadRequest, fmt.Errorf("username is required"))
 		return
@@ -377,7 +451,6 @@ func (api *API) registerUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Проверка уникальности username и email
 	exists, err := api.usersDB.CheckUserExists(r.Context(), user.Username, user.Email)
 	if err != nil {
 		api.sendError(w, http.StatusInternalServerError, err)
@@ -388,7 +461,6 @@ func (api *API) registerUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Регистрация пользователя
 	id, err := api.usersDB.UserRegister(r.Context(), &user)
 	if err != nil {
 		api.sendError(w, http.StatusInternalServerError, err)
@@ -404,11 +476,10 @@ func (api *API) userLogin(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body"))
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err))
 		return
 	}
 
-	// Проверка, что Username и Password не пустые
 	if input.Username == "" {
 		api.sendError(w, http.StatusBadRequest, fmt.Errorf("username is required"))
 		return
@@ -418,20 +489,17 @@ func (api *API) userLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Проверка существования пользователя по username
 	user, err := api.usersDB.GetUserByUsername(r.Context(), input.Username)
 	if err != nil {
 		api.sendError(w, http.StatusNotFound, fmt.Errorf("user not found"))
 		return
 	}
 
-	// Проверка пароля (здесь предполагается, что пароль хранится в открытом виде, в реальном приложении используйте хэширование)
 	if user.Password != input.Password {
 		api.sendError(w, http.StatusUnauthorized, fmt.Errorf("invalid password"))
 		return
 	}
 
-	// Выполнение логина
 	if err := api.usersDB.UserLogin(r.Context(), user.ID); err != nil {
 		api.sendError(w, http.StatusInternalServerError, err)
 		return
@@ -448,14 +516,12 @@ func (api *API) userLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Проверка существования пользователя
 	_, err = api.usersDB.GetUser(r.Context(), id)
 	if err != nil {
 		api.sendError(w, http.StatusNotFound, fmt.Errorf("user not found"))
 		return
 	}
 
-	// Выполнение выхода
 	if err := api.usersDB.UserLogout(r.Context(), id); err != nil {
 		api.sendError(w, http.StatusInternalServerError, err)
 		return
