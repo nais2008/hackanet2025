@@ -5,12 +5,10 @@ import { AiFillProject } from "react-icons/ai";
 import { BsPeopleFill } from "react-icons/bs";
 import { RiUploadCloudFill } from "react-icons/ri";
 import { Link, NavLink } from "react-router-dom";
-import { FaFilePdf } from "react-icons/fa"
-import { BiSolidFileJson } from "react-icons/bi"
-
+import { FaFilePdf } from "react-icons/fa";
+import { BiSolidFileJson } from "react-icons/bi";
 import DropDown from "../DropDown";
 import ContextMenu from "../ContextMenu";
-
 import "./Aside.scss";
 
 interface IAside {
@@ -20,15 +18,52 @@ interface IAside {
 
 const Aside: React.FC<IAside> = ({ isOpen, onClose }) => {
   const [isContextMenuVisible, setContextMenuVisible] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("Профиль");
 
   const menuItems = [
     { icon: <BiSolidFileJson size={30} />, text: "JSON", action: "json" },
-    { icon: <FaFilePdf size={30}/>, text: "PDF", action: "pdf" },
+    { icon: <FaFilePdf size={30} />, text: "PDF", action: "pdf" },
   ];
 
   const toggleContextMenu = (e: React.MouseEvent) => {
     e.stopPropagation();
     setContextMenuVisible(true);
+  };
+
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+  };
+
+  const tabs = [
+    "Профиль",
+    "Оценка",
+    "Аватарка",
+    "Изображения",
+    "Юзернейм",
+    "Email",
+    "Сменить пароль?",
+  ];
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "Профиль":
+        return <div>Содержимое профиля</div>;
+      case "Оценка":
+        return <div>Содержимое оценки</div>;
+      case "Аватарка":
+        return <div>Содержимое аватарки</div>;
+      case "Изображения":
+        return <div>Содержимое изображений</div>;
+      case "Юзернейм":
+        return <div>Содержимое юзернейма</div>;
+      case "Email":
+        return <div>Содержимое email</div>;
+      case "Сменить пароль?":
+        return <div>Содержимое смены пароля</div>;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -75,7 +110,12 @@ const Aside: React.FC<IAside> = ({ isOpen, onClose }) => {
                 <div className="context-menu-trigger">
                   <RiUploadCloudFill size={30} />
                   Выгрузить
-                  {isContextMenuVisible && <ContextMenu items={menuItems} onClose={() => setContextMenuVisible(false)} />}
+                  {isContextMenuVisible && (
+                    <ContextMenu
+                      items={menuItems}
+                      onClose={() => setContextMenuVisible(false)}
+                    />
+                  )}
                 </div>
               </li>
               <li>
@@ -83,12 +123,50 @@ const Aside: React.FC<IAside> = ({ isOpen, onClose }) => {
               </li>
             </ul>
           </nav>
-          <div className="accaunt">
+          <div className="accaunt" onClick={toggleModal}>
             <div className="accaunt__wrapper">
               <img src="" alt="" className="avatar" />
               Nikita Tyushyakov
             </div>
           </div>
+          <AnimatePresence>
+            {isModalOpen && (
+              <motion.div
+                className="modal-overlay"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={toggleModal}
+              >
+                <motion.div
+                  className="modal-content"
+                  initial={{ y: -50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -50, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h2>Настройки</h2>
+                  <button className="modal-close" onClick={toggleModal}>
+                    ×
+                  </button>
+                  <div className="tabs">
+                    {tabs.map((tab) => (
+                      <button
+                        key={tab}
+                        className={`tab ${activeTab === tab ? "active" : ""}`}
+                        onClick={() => setActiveTab(tab)}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="tab-content">{renderTabContent()}</div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.aside>
       )}
     </AnimatePresence>

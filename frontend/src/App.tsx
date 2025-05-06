@@ -32,7 +32,11 @@ function App() {
 
   return (
     <>
-      {isProjectPage() ? <Aside isOpen={ isAsideOpen } onClose={ toggleAside } /> : <Header />}
+      {isProjectPage()
+      ? isAsideOpen
+        ? <Aside isOpen={isAsideOpen} onClose={toggleAside} />
+        : null
+      : <Header />}
       { (isProjectPage() && !isAsideOpen) && <FiSidebar onClick={ toggleAside } className="btn_open" size={ 32 }/> }
       <main>
         <AnimatePresence>
