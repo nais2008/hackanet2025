@@ -1,111 +1,101 @@
-CREATE TABLE "user_user" (
-  "id" integer PRIMARY KEY,
-  "name" text,
-  "image" image,
-  "password" varchar,
-  "username" varchar,
-  "email" varchar,
-  "role" string,
-  "date_join" datetime,
-  "last_login" datetime,
-  "attempts_count" intager,
-  "black_date" datetime
+-- Таблица пользователей
+CREATE TABLE user_user (
+                           id SERIAL PRIMARY KEY,
+                           name TEXT,
+                           image TEXT,
+                           password VARCHAR,
+                           username VARCHAR,
+                           email VARCHAR,
+                           role VARCHAR,
+                           date_join TIMESTAMP,
+                           last_login TIMESTAMP,
+                           attempts_count INTEGER,
+                           block_date TIMESTAMP
 );
 
-CREATE TABLE "project_project" (
-  "id" intager PRIMARY KEY,
-  "title" string,
-  "user_id" intager
+-- Таблица проектов
+CREATE TABLE project_project (
+                                 id SERIAL PRIMARY KEY,
+                                 title TEXT,
+                                 user_id INTEGER REFERENCES user_user(id)
 );
 
-CREATE TABLE "project_images" (
-  "id" intager PRIMARY KEY,
-  "project_id" int,
-  "image" image
+-- Комментарии к проектам
+CREATE TABLE project_comments (
+                                  id SERIAL PRIMARY KEY,
+                                  user_id INTEGER REFERENCES user_user(id),
+                                  project_id INTEGER REFERENCES project_project(id),
+                                  message TEXT,
+                                  create_at TIMESTAMP
 );
 
-CREATE TABLE "project_files" (
-  "id" intager PRIMARY KEY,
-  "project_id" int,
-  "file" file
+-- Файлы к проектам
+CREATE TABLE project_files (
+                               id SERIAL PRIMARY KEY,
+                               project_id INTEGER REFERENCES project_project(id),
+                               file TEXT
 );
 
-CREATE TABLE "task_task" (
-  "id" intager PRIMARY KEY,
-  "prject_id" int,
-  "title" varchar(150),
-  "description" varchat(200),
-  "full_description" text,
-  "deadline" datetime,
-  "status" integer,
-  "prioritet" integer,
-  "responsible_user_id" intager
+-- Изображения проектов
+CREATE TABLE project_images (
+                                id SERIAL PRIMARY KEY,
+                                project_id INTEGER REFERENCES project_project(id),
+                                image TEXT
 );
 
-CREATE TABLE "task_images" (
-  "id" intager PRIMARY KEY,
-  "task_id" int,
-  "image" image
+-- Таблица задач
+CREATE TABLE task_task (
+                           id SERIAL PRIMARY KEY,
+                           project_id INTEGER REFERENCES project_project(id),
+                           title VARCHAR(150),
+                           description VARCHAR(200),
+                           full_description TEXT,
+                           deadline TIMESTAMP,
+                           status INTEGER,
+                           priority INTEGER,
+                           responsible_user_id INTEGER REFERENCES user_user(id)
 );
 
-CREATE TABLE "task_files" (
-  "id" intager PRIMARY KEY,
-  "task_id" int,
-  "file" file
+-- Файлы задач
+CREATE TABLE task_files (
+                            id SERIAL PRIMARY KEY,
+                            task_id INTEGER REFERENCES task_task(id),
+                            file TEXT
 );
 
-CREATE TABLE "task_task_tags" (
-  "id" integer PRIMARY KEY,
-  "task_id" intager,
-  "tag_id" integer
+-- Изображения задач
+CREATE TABLE task_images (
+                             id SERIAL PRIMARY KEY,
+                             task_id INTEGER REFERENCES task_task(id),
+                             image TEXT
 );
 
-CREATE TABLE "task_tag" (
-  "id" intager PRIMARY KEY,
-  "name" text,
-  "norm_text" text
+-- Этапы задач
+CREATE TABLE task_stages (
+                             id SERIAL PRIMARY KEY,
+                             task_id INTEGER REFERENCES task_task(id),
+                             stage TEXT
 );
 
-CREATE TABLE "task_stages" (
-  "id" intager PRIMARY KEY,
-  "task_id" intager,
-  "stage" intager
+-- Комментарии к задачам
+CREATE TABLE task_comments (
+                               id SERIAL PRIMARY KEY,
+                               user_id INTEGER REFERENCES user_user(id),
+                               task_id INTEGER REFERENCES task_task(id),
+                               message TEXT,
+                               create_at TIMESTAMP
 );
 
-CREATE TABLE "task_comments" (
-  "id" intager PRIMARY KEY,
-  "user_id" integer,
-  "message" text,
-  "create_at" datetime
+-- Теги задач
+CREATE TABLE task_tag (
+                          id SERIAL PRIMARY KEY,
+                          name TEXT,
+                          norm_text TEXT
 );
 
-CREATE TABLE "project_comments" (
-  "id" intager PRIMARY KEY,
-  "user_id" integer,
-  "message" text,
-  "create_at" datetime
+-- Промежуточная таблица: теги задач
+CREATE TABLE task_task_tags (
+                                id SERIAL PRIMARY KEY,
+                                task_id INTEGER REFERENCES task_task(id),
+                                tag_id INTEGER REFERENCES task_tag(id)
 );
-
-ALTER TABLE "user_user" ADD FOREIGN KEY ("id") REFERENCES "project_project" ("user_id");
-
-ALTER TABLE "project_project" ADD FOREIGN KEY ("id") REFERENCES "project_images" ("project_id");
-
-ALTER TABLE "project_project" ADD FOREIGN KEY ("id") REFERENCES "project_files" ("project_id");
-
-ALTER TABLE "task_task" ADD FOREIGN KEY ("id") REFERENCES "task_images" ("task_id");
-
-ALTER TABLE "task_task" ADD FOREIGN KEY ("id") REFERENCES "task_files" ("id");
-
-ALTER TABLE "task_task" ADD FOREIGN KEY ("id") REFERENCES "task_task_tags" ("task_id");
-
-ALTER TABLE "task_tag" ADD FOREIGN KEY ("id") REFERENCES "task_task_tags" ("tag_id");
-
-ALTER TABLE "project_project" ADD FOREIGN KEY ("id") REFERENCES "project_comments" ("id");
-
-ALTER TABLE "task_task" ADD FOREIGN KEY ("id") REFERENCES "task_comments" ("id");
-
-ALTER TABLE "user_user" ADD FOREIGN KEY ("id") REFERENCES "task_task" ("responsible_user_id");
-
-ALTER TABLE "project_project" ADD FOREIGN KEY ("id") REFERENCES "task_task" ("prject_id");
-
-ALTER TABLE "task_task" ADD FOREIGN KEY ("id") REFERENCES "task_stages" ("task_id");

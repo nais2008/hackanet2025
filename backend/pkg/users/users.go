@@ -83,3 +83,39 @@ func IsRegistered(u model.User) bool {
 func IsAdmin(u model.User) bool {
 	return u.Role == "admin"
 }
+
+func (r *DB) UserRegister(ctx context.Context, u *model.User) (int, error) {
+	var id int
+	query := `INSERT INTO user_user (name, image, password, username, email, role, date_join, last_login, attempts_count, block_date)
+		VALUES ($1, $2, $3, $4, $5, 'user', NOW(), NOW(), 0, NULL) RETURNING id`
+	err := r.Pool.QueryRow(ctx, query, u.Name, u.Image, u.Password, u.Username, u.Email).Scan(&id)
+	if err != nil {
+		return 0, fmt.Errorf("register user: %w", err)
+	}
+	return id, nil
+}
+
+// UserLogin обновляет время последнего входа пользователя
+func (r *DB) UserLogin(ctx context.Context, userID int) error {
+	cmd, err := r.Pool.Exec(ctx, `UPDATE user_user SET last_login=NOW() WHERE id=$1`, userID)
+	if err != nil {
+		return fmt.Errorf("login user: %w", err)
+	}
+	if cmd.RowsAffected() == 0 {
+		return fmt.Errorf("user %d not found", userID)
+	}
+	return nil
+}
+
+// UserLogout обновляет дату блокировки (например, для логирования) или выполняет другую логику выхода
+func (r *DB) UserLogout(ctx context.Context, userID int) error {
+	// Здесь можно обновить поле block_date или добавить другую логику
+	cmd, err := r.Pool.Exec(ctx, `UPDATE user_user SET block_date=NOW() WHERE id=$1`, userID)
+	if err != nil {
+		return fmt.Errorf("logout user: %w", err)
+	}
+	if cmd.RowsAffected() == 0 {
+		return fmt.Errorf("user %d not found", userID)
+	}
+	return nil
+}

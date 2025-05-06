@@ -95,6 +95,80 @@ func TestUserCRUDAndRoles(t *testing.T) {
 	deleted, err := r.GetUser(ctx, userID)
 	require.Error(t, err) // Ожидаем ошибку
 	require.Nil(t, deleted)
+}
 
-	fmt.Println(updated)
+func TestUserRegister(t *testing.T) {
+	r := setupDB(t)
+	ctx := context.Background()
+
+	// Тест регистрации пользователя
+	u := &model.User{
+		Name:     "User2",
+		Image:    "",
+		Password: "password",
+		Username: "user2",
+		Email:    "user2@example.com",
+	}
+
+	userID, err := r.UserRegister(ctx, u)
+	require.NoError(t, err)
+	require.NotZero(t, userID)
+
+	// Проверка, что пользователь был зарегистрирован
+	user, err := r.GetUser(ctx, userID)
+	require.NoError(t, err)
+	require.Equal(t, "User2", user.Name)
+	require.Equal(t, "user2@example.com", user.Email)
+}
+
+func TestUserLogin(t *testing.T) {
+	r := setupDB(t)
+	ctx := context.Background()
+
+	// Вставка тестового пользователя
+	u := &model.User{
+		Name:     "User3",
+		Image:    "",
+		Password: "password",
+		Username: "user3",
+		Email:    "user3@example.com",
+	}
+
+	userID, err := r.UserRegister(ctx, u)
+	require.NoError(t, err)
+
+	// Тест логина пользователя (обновление last_login)
+	err = r.UserLogin(ctx, userID)
+	require.NoError(t, err)
+
+	// Получаем пользователя и проверяем last_login
+	user, err := r.GetUser(ctx, userID)
+	require.NoError(t, err)
+	require.NotNil(t, user.LastLogin)
+}
+
+func TestUserLogout(t *testing.T) {
+	r := setupDB(t)
+	ctx := context.Background()
+
+	// Вставка тестового пользователя
+	u := &model.User{
+		Name:     "User4",
+		Image:    "",
+		Password: "password",
+		Username: "user4",
+		Email:    "user4@example.com",
+	}
+
+	userID, err := r.UserRegister(ctx, u)
+	require.NoError(t, err)
+
+	// Тест логаута пользователя (обновление block_date)
+	err = r.UserLogout(ctx, userID)
+	require.NoError(t, err)
+
+	// Получаем пользователя и проверяем block_date
+	user, err := r.GetUser(ctx, userID)
+	require.NoError(t, err)
+	require.NotNil(t, user.BlockDate)
 }
