@@ -8,7 +8,6 @@
 
   &:has(aside){
     flex-direction: row;
-    gap: 20px;
   }
   &:has(.btn_open){
     color: variables.$lightlightblue;

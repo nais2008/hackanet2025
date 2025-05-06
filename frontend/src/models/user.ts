@@ -1,5 +1,5 @@
 export interface Credentials {
-  login: string; 
+  login: string;
   password: string;
 }
 
@@ -12,7 +12,6 @@ export interface SignUpFormData {
 }
 
 export interface AuthResponse {
-  token: string;
   user: {
     id: number;
     name: string;

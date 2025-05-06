@@ -11,11 +11,8 @@ const LoginPage = observer(() => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted", { login, password });
     authStore.login({ login, password });
   };
-
-  console.log("Rendering LoginPage", { error: authStore.error });
 
   return (
     <div className="login-wrapper">
@@ -24,7 +21,7 @@ const LoginPage = observer(() => {
         <div>
           <input
             type="text"
-            placeholder="Email или username"
+            placeholder="Username"
             value={login}
             onChange={(e) => setLogin(e.target.value)}
             required
