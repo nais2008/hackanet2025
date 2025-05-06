@@ -39,7 +39,7 @@ const DropDown: React.FC = () => {
   return (
     <div className="dropdown">
       <div className="dropdown-header" onClick={toggleDropdown}>
-        {selectedItem !== null ? items.find(item => item.id === selectedItem)?.label : "Select your destination"}
+        {selectedItem !== null ? items.find(item => item.id === selectedItem)?.label : "Мои доски"}
         <i className={`fa fa-chevron-right icon ${isOpen && "open"}`}></i>
       </div>
       <div className={`dropdown-body ${isOpen && "open"}`}>

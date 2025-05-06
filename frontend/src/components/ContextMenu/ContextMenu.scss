@@ -1,0 +1,38 @@
+.context-menu-container {
+  position: relative;
+
+  .action-menu {
+    display: block; /* Уже управляется видимостью через родителя */
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #2c2c2c;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    min-width: 180px;
+    padding: 5px 0;
+
+    .action-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 15px;
+      color: #e0e0e0;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+
+      svg {
+        margin-right: 10px;
+        color: #87ceeb;
+        font-size: 16px;
+      }
+
+      &:hover {
+        background: #3a3a3a;
+        color: #fff;
+      }
+    }
+  }
+}
+

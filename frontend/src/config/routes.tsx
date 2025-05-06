@@ -3,6 +3,18 @@ const router = {
     mask: "/",
     create: () => "/",
   },
+  project: {
+    mask: "/p",
+    create: () => "/p",
+  },
+  project_id: {
+    mask: "/p/:id",
+    create: (id: number) => `/p/${id}`,
+  },
+  project_member: {
+    mask: "/p/member",
+    create: () => "/p/member",
+  },
   login: {
     mask: "/login",
     create: () => "/login",

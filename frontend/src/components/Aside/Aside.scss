@@ -34,6 +34,7 @@ aside{
       variables.$neonLightBlue,
       variables.$purple
     );
+    z-index: -1;
   }
   .aside__header{
     display: flex;
@@ -52,30 +53,51 @@ aside{
     flex-direction: column;
     gap: 20px;
 
-    li :is(a, div){
+    li a{
       display: flex;
       align-items: center;
       gap: 20px;
       color: variables.$lightlightblue;
       cursor: pointer;
+      padding: 20px;
+      border-radius: 10px;
+      background: rgba($color: #fff, $alpha: .10);
+      transition: background .2s;
 
       &.active{
-        padding: 20px;
         background: variables.$backLightBlude;
-        border-radius: 10px;
         font-weight: 700;
       }
+    }
+    li div{
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      color: variables.$lightlightblue;
+      cursor: pointer;
     }
   }
   .accaunt{
     flex: 1;
     display: flex;
-    align-content: flex-end;
+    align-items: flex-end;
+    justify-content: space-between;
 
-    .avatar{
-      width: 50px;
-      height: 50px;
-      background-color: #999999;
+    .accaunt__wrapper{
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+
+      .avatar{
+        display: block;
+        width: 50px;
+        height: 50px;
+        background-color: #fff;
+        border-radius: 50%;
+      }
     }
   }
 }

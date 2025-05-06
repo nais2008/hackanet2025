@@ -7,6 +7,9 @@ import LoginPage from "./pages/LogInPage"
 import SignUpPage from "./pages/SignUpPage"
 import MainPage from "./pages/MainPage/MainPage"
 import PageNotFound from "./pages/PageNotFound"
+import ProjectIdPage from "./pages/ProjectIdPage"
+import ProjectMemberPage from "./pages/ProjectMemberPage"
+import ProjectPage from "./pages/ProjectPage"
 
 import Aside from "./components/Aside"
 import Footer from "./components/Footer"
@@ -34,7 +37,7 @@ function App() {
       <main>
         <AnimatePresence>
           <motion.div
-             key={location.pathname}
+            key={location.pathname}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
@@ -43,6 +46,9 @@ function App() {
               <Route path={ router.main.mask } element={ <MainPage /> } />
               <Route path={ router.login.mask } element={ <LoginPage /> } />
               <Route path={ router.signup.mask } element={ <SignUpPage /> } />
+              <Route path={ router.project.mask } element={ <ProjectPage /> } />
+              <Route path={ router.project_id.mask } element={ <ProjectIdPage /> } />
+              <Route path={ router.project_member.mask } element={ <ProjectMemberPage /> } />
               <Route path={ router.page404.mask } element={ <PageNotFound /> } />
             </Routes>
           </motion.div>
