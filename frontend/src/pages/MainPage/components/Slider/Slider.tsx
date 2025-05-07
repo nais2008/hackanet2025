@@ -37,16 +37,20 @@ const Slider = () => {
         }}
       >
         <SwiperSlide>
-          <img src="" alt="" />
+          <h1>Загрузка</h1>
+          <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Accusamus quo excepturi earum modi reiciendis ad maiores laborum nihil tempora eius, ullam quod est molestiae tenetur. Cum quaerat adipisci hic numquam!</p>
         </SwiperSlide>
         <SwiperSlide>
-          <img src="" alt="" />
+        <h1>Загрузка</h1>
+          <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Repudiandae aperiam sunt maxime dolor eos, unde asperiores enim assumenda delectus voluptas necessitatibus nostrum ullam ad earum quis, perspiciatis quibusdam voluptate modi.</p>
         </SwiperSlide>
         <SwiperSlide>
-          <img src="" alt="" />
+          <h1>Загрузка</h1>
+          <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ab dignissimos molestiae, inventore doloribus accusantium ut nihil molestias impedit quaerat vitae quas corporis iusto, aperiam provident voluptates, laboriosam architecto dicta neque.</p>
         </SwiperSlide>
         <SwiperSlide>
-          <img src="" alt="" />
+          <h1>Загрузка</h1>
+          <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Labore, aliquid eaque unde ut deleniti officia dolore laborum nihil doloribus consequatur odit ullam adipisci vitae fuga quo ea quos quia culpa.</p>
         </SwiperSlide>
       </Swiper>
     </section>

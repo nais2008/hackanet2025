@@ -26,4 +26,13 @@ export default defineConfig({
   resolve: {
     alias: parseTsConfigPaths(tsconfig.compilerOptions.paths),
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+  },
 })

@@ -180,7 +180,7 @@ const Aside: React.FC<IAside> = ({ isOpen, onClose }) => {
             <div className="accaunt">
               <div className="accaunt__wrapper" onClick={() => setIsModalOpen(true)}>
                 <img src="" alt="" className="avatar" />
-                Ждем инфу
+                Никита
               </div>
             </div>
           </motion.aside>

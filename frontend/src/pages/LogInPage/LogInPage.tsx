@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import React, { useState } from "react";
 import { observer } from "mobx-react-lite";
 import { authStore } from "../../stores/authStore";
@@ -8,10 +8,16 @@ import "./LoginPage.scss";
 const LoginPage = observer(() => {
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    authStore.login({ login, password });
+    try {
+      await authStore.login({ login, password });
+      navigate("/"); // Редирект на главную после успешного логина
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
   };
 
   return (
@@ -42,7 +48,11 @@ const LoginPage = observer(() => {
         <button type="submit" className="btn" disabled={authStore.loading}>
           {authStore.loading ? "Входим..." : "Войти"}
         </button>
-        {authStore.error && <p className="error">{authStore.error}</p>}
+        {authStore.error && (
+          <p className="error" style={{ color: "red", marginTop: "10px" }}>
+            {authStore.error}
+          </p>
+        )}
       </form>
     </div>
   );
