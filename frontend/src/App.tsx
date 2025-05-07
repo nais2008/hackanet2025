@@ -19,6 +19,7 @@ import router from "./config/routes"
 
 import "./App.scss"
 
+
 function App() {
   const location = useLocation()
   const [ isAsideOpen, setIsAsideOpen ] = React.useState(true)

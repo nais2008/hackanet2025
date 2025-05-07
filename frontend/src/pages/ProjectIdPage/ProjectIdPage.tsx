@@ -8,7 +8,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import ContextMenu2 from "../../components/ContextMenu2";
-import { FaEdit, FaTrash, FaTimes } from "react-icons/fa";
+import { FaEdit, FaTrash } from "react-icons/fa";
+import TagsInput from "../../components/TagsInput";
 import "./ProjectIdPage.scss";
 
 interface Task {
@@ -194,11 +195,17 @@ const StageColumn = ({ stage, tasks, setStages }: any) => {
             </div>
             <div className="form-group">
               <label>Теги</label>
-              <input
+              {/* <input
                 type="text"
                 value={newTaskTags}
                 onChange={(e) => setNewTaskTags(e.target.value)}
                 placeholder="Введите теги"
+              /> */}
+              <TagsInput
+                selector="tag-input1"
+                duplicate={false}
+                max={20}
+                initialTags={["PHP", "JavaScript", "CSS"]}
               />
             </div>
             <div className="form-group">

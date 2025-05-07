@@ -1,3 +1,5 @@
+// Модель пользователя для работы с API и MobX
+
 export interface Credentials {
   login: string;
   password: string;
@@ -11,11 +13,14 @@ export interface SignUpFormData {
   confirmPassword: string;
 }
 
+export interface User {
+  id: number;
+  name: string;
+  username: string;
+  email: string;
+}
+
 export interface AuthResponse {
-  user: {
-    id: number;
-    name: string;
-    username: string;
-    email: string;
-  };
+  user: User;
+  token: string; // Добавлен токен, если он возвращается из API
 }

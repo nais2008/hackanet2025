@@ -73,3 +73,27 @@ footer{
     }
   }
 }
+
+@media (width <= 1580px) {
+  .right{
+    flex-direction: column;
+    gap: 20px;
+
+    ul{
+      gap: 20px !important;
+    }
+  }
+}
+
+@media (width <= 750px) {
+  footer{
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+
+    .right{
+      align-items: center;
+      padding: 0;
+    }
+  }
+}

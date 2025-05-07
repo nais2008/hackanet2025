@@ -17,6 +17,7 @@
     "@hello-pangea/dnd": "^18.0.1",
     "@vkid/sdk": "^2.5.2",
     "add": "^2.0.6",
+    "axios": "^1.9.0",
     "framer-motion": "^12.9.7",
     "mobx": "^6.13.7",
     "mobx-react-lite": "^4.1.0",

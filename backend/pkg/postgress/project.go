@@ -5,15 +5,15 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
-	prj "github.com/nais2008/hackanet2025/backend/pkg/postgress/models/project_models"
+	projectmodel "github.com/nais2008/hackanet2025/backend/pkg/postgress/models/project_models"
 )
 
 // Project retrieves a project by title
-func (db *DB) Project(ctx context.Context, title string) (*prj.Project, error) {
+func (db *DB) Project(ctx context.Context, title string) (*projectmodel.Project, error) {
 	query := `SELECT id, title, user_id 
               FROM project_project 
               WHERE title = $1`
-	var p prj.Project
+	var p projectmodel.Project
 	err := db.Pool.QueryRow(ctx, query, title).Scan(&p.ID, &p.Title, &p.UserID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -25,11 +25,11 @@ func (db *DB) Project(ctx context.Context, title string) (*prj.Project, error) {
 }
 
 // GetProjectByID retrieves a project by ID
-func (db *DB) GetProjectByID(ctx context.Context, id int) (*prj.Project, error) {
+func (db *DB) GetProjectByID(ctx context.Context, id int) (*projectmodel.Project, error) {
 	query := `SELECT id, title, user_id 
               FROM project_project 
               WHERE id = $1`
-	var p prj.Project
+	var p projectmodel.Project
 	err := db.Pool.QueryRow(ctx, query, id).Scan(&p.ID, &p.Title, &p.UserID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -41,11 +41,11 @@ func (db *DB) GetProjectByID(ctx context.Context, id int) (*prj.Project, error) 
 }
 
 // GetTaskByID retrieves a task by ID
-func (db *DB) GetTaskByID(ctx context.Context, id int) (*prj.Task, error) {
+func (db *DB) GetTaskByID(ctx context.Context, id int) (*projectmodel.Task, error) {
 	query := `SELECT id, project_id, title, description, full_description 
               FROM task_task 
               WHERE id = $1`
-	var t prj.Task
+	var t projectmodel.Task
 	err := db.Pool.QueryRow(ctx, query, id).Scan(&t.ID, &t.ProjectID, &t.Title, &t.Description, &t.Full_description)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -97,43 +97,57 @@ func (db *DB) DeleteProject(ctx context.Context, id int) error {
 	return nil
 }
 
-// CreateTask creates a new task for a project and returns its ID
 func (db *DB) CreateTask(ctx context.Context, projectID int, title, description, fullDescription string) (int, error) {
-	query := `INSERT INTO task_task (project_id, title, description, full_description) 
-              VALUES ($1, $2, $3, $4) 
-              RETURNING id`
 	var id int
-	err := db.Pool.QueryRow(ctx, query, projectID, title, description, fullDescription).Scan(&id)
-	if err != nil {
-		return 0, fmt.Errorf("failed to create task: %w", err)
-	}
-	return id, nil
+	err := db.Pool.QueryRow(ctx, `
+		INSERT INTO task_task (project_id, title, description, full_description)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id`, projectID, title, description, fullDescription).Scan(&id)
+	return id, err
 }
 
-// UpdateTask updates a task by ID
-func (db *DB) UpdateTask(ctx context.Context, id int, title, description, fullDescription string) error {
-	query := `UPDATE task_task 
-              SET title = $1, description = $2, full_description = $3 
-              WHERE id = $4`
-	tag, err := db.Pool.Exec(ctx, query, title, description, fullDescription, id)
+func (db *DB) GetTasksByProjectID(ctx context.Context, projectID int) ([]projectmodel.Task, error) {
+	rows, err := db.Pool.Query(ctx, `
+		SELECT id, project_id, title, description, full_description, created_at
+		FROM task_task WHERE project_id = $1`, projectID)
 	if err != nil {
-		return fmt.Errorf("failed to update task: %w", err)
+		return nil, err
 	}
-	if tag.RowsAffected() == 0 {
-		return fmt.Errorf("task with id %d not found", id)
+	defer rows.Close()
+
+	tasks := []projectmodel.Task{}
+	for rows.Next() {
+		var t projectmodel.Task
+		err := rows.Scan(&t.ID, &t.ProjectID, &t.Title, &t.Description, &t.Full_description, &t.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, t)
 	}
-	return nil
+	return tasks, nil
 }
 
-// DeleteTask deletes a task by ID
-func (db *DB) DeleteTask(ctx context.Context, id int) error {
-	query := `DELETE FROM task_task WHERE id = $1`
-	tag, err := db.Pool.Exec(ctx, query, id)
+func (db *DB) GetTaskByTitleAndProjectID(ctx context.Context, projectID int, title string) (*projectmodel.Task, error) {
+	var t projectmodel.Task
+	err := db.Pool.QueryRow(ctx, `
+		SELECT id, project_id, title, description, full_description, created_at
+		FROM task_task WHERE project_id = $1 AND title = $2`, projectID, title).Scan(
+		&t.ID, &t.ProjectID, &t.Title, &t.Description, &t.Full_description, &t.CreatedAt,
+	)
 	if err != nil {
-		return fmt.Errorf("failed to delete task: %w", err)
+		return nil, err
 	}
-	if tag.RowsAffected() == 0 {
-		return fmt.Errorf("task with id %d not found", id)
-	}
-	return nil
+	return &t, nil
+}
+
+func (db *DB) UpdateTask(ctx context.Context, projectID int, oldTitle, newTitle, description, fullDescription string) error {
+	_, err := db.Pool.Exec(ctx, `
+		UPDATE task_task SET title = $1, description = $2, full_description = $3
+		WHERE project_id = $4 AND title = $5`, newTitle, description, fullDescription, projectID, oldTitle)
+	return err
+}
+
+func (db *DB) DeleteTask(ctx context.Context, projectID int, title string) error {
+	_, err := db.Pool.Exec(ctx, `DELETE FROM task_task WHERE project_id = $1 AND title = $2`, projectID, title)
+	return err
 }
