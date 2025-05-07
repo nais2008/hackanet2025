@@ -1,15 +1,16 @@
 @use "./styles/variables";
 
-#root{
+#root {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   position: relative;
 
-  &:has(aside){
+  &:has(aside) {
     flex-direction: row;
   }
-  &:has(.btn_open){
+
+  &:has(.btn_open) {
     color: variables.$lightlightblue;
     padding: 20px;
     position: absolute;
