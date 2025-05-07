@@ -1,0 +1,34 @@
+# Makefile для hackanet2025
+
+# Каталоги
+FRONT_DIR := frontend
+BACKEND_DIR := backend/src
+
+.PHONY: help install-front dev-front run-back dev
+
+help:
+	@echo "Доступные команды:"
+	@echo "  make install-front   — установить зависимости фронтенда"
+	@echo "  make dev-front       — запустить front (npm run dev)"
+	@echo "  make run-back        — запустить back (go run server.go)"
+	@echo "  make dev             — установить фронт и запустить front и back параллельно"
+
+# Установка зависимостей для фронтенда
+install-front:
+	cd $(FRONT_DIR) && npm install
+
+# Запуск фронтенда в режиме разработки
+dev-front:
+	cd $(FRONT_DIR) && npm run dev
+
+# Запуск бэкенда
+run-back:
+	cd $(BACKEND_DIR) && go run server.go
+
+# Полный режим разработки: сначала установим фронт, затем запустим оба сервиса
+dev: install-front
+	@echo ">>> Запускаем фронтенд и бэкенд параллельно"
+	# & — запустить в фоне, wait — дождаться завершения всех
+	$(MAKE) dev-front & \
+	$(MAKE) run-back; \
+	wait
