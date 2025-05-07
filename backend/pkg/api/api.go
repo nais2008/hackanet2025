@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -139,6 +138,13 @@ func (api *API) getProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tasks, err := api.db.GetTasksByProjectID(r.Context(), id)
+	if err != nil {
+		api.sendError(w, http.StatusInternalServerError, fmt.Errorf("cannot load tasks: %w", err))
+		return
+	}
+	project.Tasks = tasks
+
 	api.sendSuccess(w, http.StatusOK, project)
 }
 
@@ -189,138 +195,79 @@ func (api *API) deleteProject(w http.ResponseWriter, r *http.Request) {
 
 // Task handlers
 func (api *API) createTask(w http.ResponseWriter, r *http.Request) {
-	projectIdStr := mux.Vars(r)["projectId"]
-	projectID, err := strconv.Atoi(projectIdStr)
-	if err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid project ID: %w", err))
-		return
-	}
-
-	var input projectmodel.Task
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err))
-		return
-	}
-
-	if input.Title == "" {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("title is required"))
-		return
-	}
-
-	id, err := api.db.CreateTask(r.Context(), projectID, input.Title, input.Description, input.Full_description)
-	if err != nil {
-		api.sendError(w, http.StatusInternalServerError, fmt.Errorf("failed to create task: %w", err))
-		return
-	}
-
-	api.sendSuccess(w, http.StatusCreated, map[string]int{"id": id})
-}
-func (api *API) getTask(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	projectIdStr := vars["projectId"]
-	projectID, err := strconv.Atoi(projectIdStr)
+	projectID, err := strconv.Atoi(mux.Vars(r)["projectId"])
 	if err != nil {
 		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid project ID"))
 		return
 	}
+	body, _ := io.ReadAll(r.Body)
+	r.Body = io.NopCloser(bytes.NewReader(body))
 
-	taskIdStr := vars["id"]
-	taskID, err := strconv.Atoi(taskIdStr)
-	if err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid task ID"))
+	var input projectmodel.Task
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil || input.Title == "" {
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request or title missing"))
 		return
 	}
+	id, err := api.db.CreateTask(r.Context(), projectID, input.Title, input.Description, input.Full_description)
+	if err != nil {
+		api.sendError(w, http.StatusInternalServerError, err)
+		return
+	}
+	api.sendSuccess(w, http.StatusCreated, map[string]int{"id": id})
+}
 
-	// Предполагается, что в projects.go есть GetTaskByID
-	// Если у тебя другая функция (например, GetTask), замени здесь
-	task, err := api.db.GetTaskByID(r.Context(), taskID)
+func (api *API) getTasks(w http.ResponseWriter, r *http.Request) {
+	projectID, err := strconv.Atoi(mux.Vars(r)["projectId"])
+	if err != nil {
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid project ID"))
+		return
+	}
+	tasks, err := api.db.GetTasksByProjectID(r.Context(), projectID)
+	if err != nil {
+		api.sendError(w, http.StatusInternalServerError, err)
+		return
+	}
+	api.sendSuccess(w, http.StatusOK, tasks)
+}
+
+func (api *API) getTask(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	projectID, _ := strconv.Atoi(vars["projectId"])
+	taskName := vars["name"]
+	task, err := api.db.GetTaskByTitleAndProjectID(r.Context(), projectID, taskName)
 	if err != nil {
 		api.sendError(w, http.StatusNotFound, err)
 		return
 	}
-
-	// Проверяем, что задача принадлежит указанному проекту
-	if task.ProjectID != projectID {
-		api.sendError(w, http.StatusNotFound, fmt.Errorf("task with ID %d not found in project %d", taskID, projectID))
-		return
-	}
-
 	api.sendSuccess(w, http.StatusOK, task)
 }
 
 func (api *API) updateTask(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	projectIdStr := vars["projectId"]
-	projectID, err := strconv.Atoi(projectIdStr)
-	if err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid project ID"))
-		return
-	}
-
-	taskIdStr := vars["id"]
-	taskID, err := strconv.Atoi(taskIdStr)
-	if err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid task ID"))
-		return
-	}
-
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("failed to read request body: %w", err))
-		return
-	}
-	log.Printf("updateTask: Received body: %s", string(body))
+	projectID, _ := strconv.Atoi(vars["projectId"])
+	taskName := vars["name"]
+	body, _ := io.ReadAll(r.Body)
 	r.Body = io.NopCloser(bytes.NewReader(body))
-
 	var input projectmodel.Task
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body: %w", err))
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil || input.Title == "" {
+		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid request body or title missing"))
 		return
 	}
-	log.Printf("updateTask: Parsed input: %+v", input)
-
-	if input.Title == "" {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("title is required"))
-		return
-	}
-
-	// Предполагается, что UpdateTask принимает projectID, taskID и поля задачи
-	// Если сигнатура другая, например:
-	// func (r *DB) UpdateTask(ctx context.Context, taskID int, title, description, fullDescription string) error
-	// Используй: api.db.UpdateTask(r.Context(), taskID, input.Title, input.Description, input.Full_description)
-	if err := api.db.UpdateTask(r.Context(), projectID, taskID, input.Title, input.Description, input.Full_description); err != nil {
+	if err := api.db.UpdateTask(r.Context(), projectID, taskName, input.Title, input.Description, input.Full_description); err != nil {
 		api.sendError(w, http.StatusInternalServerError, err)
 		return
 	}
-
 	api.sendSuccess(w, http.StatusOK, map[string]string{"message": "task updated"})
 }
 
 func (api *API) deleteTask(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	projectIdStr := vars["projectId"]
-	projectID, err := strconv.Atoi(projectIdStr)
-	if err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid project ID"))
-		return
-	}
-
-	taskIdStr := vars["id"]
-	taskID, err := strconv.Atoi(taskIdStr)
-	if err != nil {
-		api.sendError(w, http.StatusBadRequest, fmt.Errorf("invalid task ID"))
-		return
-	}
-
-	// Предполагается, что DeleteTask принимает projectID и taskID
-	// Если сигнатура другая, например:
-	// func (r *DB) DeleteTask(ctx context.Context, taskID int) error
-	// Используй: api.db.DeleteTask(r.Context(), taskID)
-	if err := api.db.DeleteTask(r.Context(), projectID, taskID); err != nil {
+	projectID, _ := strconv.Atoi(vars["projectId"])
+	taskName := vars["name"]
+	if err := api.db.DeleteTask(r.Context(), projectID, taskName); err != nil {
 		api.sendError(w, http.StatusInternalServerError, err)
 		return
 	}
-
 	api.sendSuccess(w, http.StatusOK, map[string]string{"message": "task deleted"})
 }
 
