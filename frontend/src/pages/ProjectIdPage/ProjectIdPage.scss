@@ -1,0 +1,112 @@
+.project-board {
+  display: flex;
+  gap: 20px;
+  padding: 10px;
+  overflow-x: auto;
+  height: 100vh;
+}
+
+.stage-column {
+  background: rgba($color: #fff, $alpha: .10);
+  border-radius: 10px;
+  width: 300px;
+  min-width: 300px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.stage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  color: #ffffff;
+  font-size: 16px;
+
+  b {
+    font-weight: bold;
+  }
+
+  .stage-add {
+    background: #3a3f47;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    color: #ffffff;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background-color: #4a4f57;
+    }
+  }
+}
+
+.task-card {
+  background-color: rgba($color: #fff, $alpha: .10);
+  border-radius: 8px;
+  padding: 10px;
+  color: #ffffff;
+  cursor: grab;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  position: relative;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  .task-title {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .task-desc {
+    font-size: 12px;
+    color: #a0a0a0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow-x: hidden;
+  }
+
+  .task-image {
+    max-width: 100%;
+    border-radius: 4px;
+    margin-top: 5px;
+  }
+
+  .task-actions {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+  }
+}
+
+.new-stage-button {
+  background-color: #3a3f47;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  color: #00b7ff;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 150px;
+
+  &:hover {
+    background-color: #4a4f57;
+  }
+}
+
